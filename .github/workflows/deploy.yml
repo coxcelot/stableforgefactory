@@ -9,13 +9,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      PK: ${{ secrets.PK }}
+      MNEMONIC: ${{ secrets.MNEMONIC }}
       BASE_RPC: ${{ secrets.BASE_RPC }}
-      AAVE_POOL: 0x4e033b8c5d5e...
-      AERODROME_ROUTER: 0x6cb442acf35158d5eda88fe602221b67b400be3e
-      AERODROME_FACTORY: 0x4200000000000000000000000000000000000006
-      USDC: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
-      CREATOR: 0xfbdb59298ea0b9d867897cceddb0de1e2b03909c
+      AAVE_POOL: "0x4e033b8c5d5eaccf6d7ec5584411cab566dcf6e7"
+      AERODROME_ROUTER: "0x6cb442acf35158d5eda88fe602221b67b400be3e"
+      AERODROME_FACTORY: "0x4200000000000000000000000000000000000006"
+      USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      CREATOR: "0xfbdb59298ea0b9d867897cceddb0de1e2b03909c"
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4

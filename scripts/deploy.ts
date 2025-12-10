@@ -1,49 +1,38 @@
 import { ethers } from "hardhat";
+import * as fs from "fs";
+import * as path from "path";
 import "dotenv/config";
-import * as fs from 'fs';
-import * as path from 'path';
-import { CREATOR } from "../hardhat.config";
 
 async function main() {
-  const pool = process.env.AAVE_POOL!;
-  const router = process.env.AERODROME_ROUTER!;
-  const factory = process.env.AERODROME_FACTORY!;
-  const usdc = process.env.USDC!;
+  // Canonical Base addresses (update AAVE_POOL to actual Base V3 Pool address!)
+  const AAVE_POOL = process.env.AAVE_POOL || "0x4e033b8c5d5e...";
+  const AERODROME_ROUTER = process.env.AERODROME_ROUTER || "0x6cb442acf35158d5eda88fe602221b67b400be3e";
+  const AERODROME_FACTORY = process.env.AERODROME_FACTORY || "0x4200000000000000000000000000000000000006";
+  const USDC = process.env.USDC || "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+  const CREATOR = process.env.CREATOR || "0xfbdb59298ea0b9d867897cceddb0de1e2b03909c";
 
-  console.log("Deploying StableForgeFactory to Base mainnet...");
-
+  // Deploy StableForgeFactory
   const StableForgeFactory = await ethers.getContractFactory("StableForgeFactory");
-  const sf = await StableForgeFactory.deploy(pool, router, factory, usdc, CREATOR);
-  await sf.waitForDeployment();
-
-  const factoryAddress = await sf.getAddress();
-  console.log(`StableForgeFactory deployed to: ${factoryAddress}`);
-
-  // --- Step 1: Write Factory address to deploy.out ---
-  const output = `StableForgeFactory Address: ${factoryAddress}\nBaseScan Link: https://basescan.org/address/${factoryAddress}`;
-  fs.writeFileSync('deploy.out', output);
-  console.log("Deployment output written to deploy.out");
-
-  // --- Step 2: Inject Factory address into frontend/index.html ---
-  const htmlPath = path.join(__dirname, '../frontend/index.html');
-  let htmlContent = fs.readFileSync(htmlPath, 'utf8');
-
-  const placeholder = 'FACTORY_ADDRESS_PLACEHOLDER';
-  const newLink = `<a href="https://basescan.org/address/${factoryAddress}" target="_blank" class="text-blue-400 hover:text-blue-300 font-mono text-sm underline transition-colors">${factoryAddress}</a>`;
-  
-  // Replace all instances of the placeholder with the new link
-  const updatedHtmlContent = htmlContent.replace(
-      new RegExp(placeholder, 'g'), 
-      newLink
+  const factory = await StableForgeFactory.deploy(
+    AAVE_POOL,
+    AERODROME_ROUTER,
+    AERODROME_FACTORY,
+    USDC,
+    CREATOR
   );
+  await factory.waitForDeployment();
 
-  fs.writeFileSync(htmlPath, updatedHtmlContent);
-  console.log("frontend/index.html updated with factory address and BaseScan link.");
+  const addr = await factory.getAddress();
+  console.log(`StableForgeFactory deployed at: ${addr}`);
+
+  // Save to deploy.out for CI/CD injection
+  const outPath = path.join(__dirname, "..", "deploy.out");
+  fs.writeFileSync(outPath, `StableForgeFactory: ${addr}\n`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
 });
 
 
