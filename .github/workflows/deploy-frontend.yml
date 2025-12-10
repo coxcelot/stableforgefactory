@@ -39,6 +39,21 @@ jobs:
             echo "No deploy.out found; skipping injection"
           fi
 
+      - name: Validate injection
+        run: |
+          if [ -f deploy_artifacts/deploy.out ]; then
+            FACTORY_ADDR=$(grep -E "StableForgeFactory:" deploy_artifacts/deploy.out | awk '{print $2}')
+            echo "Validating frontend/index.html contains: $FACTORY_ADDR"
+            if grep -q "$FACTORY_ADDR" frontend/index.html; then
+              echo "Validation passed: address found"
+            else
+              echo "Validation failed: address not found in frontend/index.html"
+              exit 1
+            fi
+          else
+            echo "No deploy.out found; skipping validation"
+          fi
+
       - name: Upload frontend
         uses: actions/upload-pages-artifact@v3
         with:
