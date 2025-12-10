@@ -1,8 +1,11 @@
-# StableForgeFactory Frontend
+# StableForge Frontend
 
-This folder contains a minimal static frontend for the StableForgeFactory project.
+This is the CDN‑based frontend for the StableForgeFactory contract deployed on Base mainnet.
 
-- Live site: https://<your-github-username>.github.io/<your-repo-name>/
-- The Pages deploy workflow will automatically inject the deployed factory address into `index.html` if a `stableforge-deploy` artifact (containing `deploy.out`) is available from the deployment workflow.
+## 🚀 Live Deployment
 
-To preview locally, open `frontend/index.html` in your browser.
+After pushing to `main`, GitHub Actions will publish the site automatically via GitHub Pages.
+
+Visit the deployed site at:
+
+

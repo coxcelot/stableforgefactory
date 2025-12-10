@@ -40,11 +40,20 @@ jobs:
         run: |
           npx hardhat run scripts/deploy.ts --network base | tee deploy.out
 
-      - name: Inject factory address into frontend
+      - name: Inject factory and token addresses into frontend
         run: |
           FACTORY_ADDR=$(grep -E "StableForgeFactory:" deploy.out | awk '{print $2}')
           echo "Factory address: $FACTORY_ADDR"
           sed -i "s|<!--FACTORY_PLACEHOLDER-->|<a href=\"https://basescan.org/address/${FACTORY_ADDR}\" target=\"_blank\">${FACTORY_ADDR}</a>|" frontend/index.html || true
+
+          # Extract deployed token addresses (assuming deploy.out logs them as 'Token: <addr>')
+          TOKENS=$(grep -E "Token:" deploy.out | awk '{print $2}')
+          i=1
+          for addr in $TOKENS; do
+            echo "Injecting token $i: $addr"
+            sed -i "s|<!--TOKEN_PLACEHOLDER_${i}-->|<a href=\"https://basescan.org/address/${addr}\" target=\"_blank\">${addr}</a>|g" frontend/index.html || true
+            i=$((i+1))
+          done
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

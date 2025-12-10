@@ -39,7 +39,8 @@ jobs:
         run: |
           FACTORY_ADDR=$(grep -E "StableForgeFactory:" deploy.out | awk '{print $2}')
           echo "Factory address: $FACTORY_ADDR"
-          sed -i "s|<!--FACTORY_PLACEHOLDER-->|<a href=\"https://basescan.org/address/${FACTORY_ADDR}\" target=\"_blank\">${FACTORY_ADDR}</a>|" frontend/index.html
+          # Replace modern placeholder used by frontend with BaseScan anchor
+          sed -i "s|FACTORY_ADDRESS_PLACEHOLDER|<a href=\"https://basescan.org/address/${FACTORY_ADDR}\" target=\"_blank\">${FACTORY_ADDR}</a>|g" frontend/index.html || true
 
       - name: Upload deploy artifacts
         uses: actions/upload-artifact@v4
@@ -47,5 +48,5 @@ jobs:
           name: stableforge-deploy
           path: |
             deploy.out
-            frontend/index.html
+            frontend
 

@@ -36,7 +36,7 @@
                     <div>
                         <p class="text-blue-300 text-sm mb-1">Factory Address:</p>
                         <p class="text-mono text-sm break-all">
-                            <a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>
+                            FACTORY_ADDRESS_PLACEHOLDER
                         </p>
                     </div>
                     <div>
@@ -46,7 +46,7 @@
                     <div>
                         <p class="text-blue-300 text-sm mb-1">View on BlockExplorer:</p>
                         <p class="text-mono text-sm">
-                            <a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>
+                            FACTORY_ADDRESS_PLACEHOLDER
                         </p>
                     </div>
                 </div>
@@ -96,7 +96,7 @@
 
             <!-- Actions -->
             <div class="space-y-3">
-                <a href="https://basescan.org/address/<a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>" target="_blank" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition-colors">
+                <a href="https://basescan.org/address/FACTORY_ADDRESS_PLACEHOLDER" target="_blank" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition-colors">
                     View on BaseScan
                 </a>
                 <a href="https://github.com/coxcelot/stableforgefactory" target="_blank" class="block w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg text-center transition-colors">
@@ -132,7 +132,7 @@
 
         // Auto-update factory address links when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            const placeholder = '<a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>';
+            const placeholder = 'FACTORY_ADDRESS_PLACEHOLDER';
             // In production, the deployment script will replace these automatically
             console.log("StableForgeFactory frontend loaded");
         });
