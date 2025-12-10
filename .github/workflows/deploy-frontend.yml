@@ -21,6 +21,24 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      - name: Download deploy artifacts (if any)
+        uses: actions/download-artifact@v4
+        with:
+          name: stableforge-deploy
+          path: deploy_artifacts
+        continue-on-error: true
+
+      - name: Inject Factory Address into frontend (if available)
+        run: |
+          if [ -f deploy_artifacts/deploy.out ]; then
+            FACTORY_ADDR=$(grep -E "StableForgeFactory:" deploy_artifacts/deploy.out | awk '{print $2}')
+            echo "Found factory address: $FACTORY_ADDR"
+            # Replace placeholder with BaseScan link
+            sed -i "s|FACTORY_ADDRESS_PLACEHOLDER|<a href=\"https://basescan.org/address/${FACTORY_ADDR}\" target=\"_blank\">${FACTORY_ADDR}</a>|g" frontend/index.html || true
+          else
+            echo "No deploy.out found; skipping injection"
+          fi
+
       - name: Upload frontend
         uses: actions/upload-pages-artifact@v3
         with:
