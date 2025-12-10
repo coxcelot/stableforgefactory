@@ -1,0 +1,34 @@
+{
+  "name": "stableforgefactory",
+  "version": "1.0.0",
+  "description": "StableForgeFactory: Decentralized stablecoin factory on Base mainnet",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.ts --network base",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "node": "hardhat node",
+    "clean": "hardhat clean"
+  },
+  "keywords": [
+    "ethereum",
+    "base",
+    "stablecoin",
+    "aerodrome",
+    "aave"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@types/node": "^20.10.6",
+    "hardhat": "^2.19.4",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "ethers": "^6.10.0",
+    "dotenv": "^16.3.1",
+    "@openzeppelin/contracts": "^4.9.3"
+  }
+}
