@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>StableForgeFactory • Base Mainnet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Ethers v5 via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --card: #171a2a;
+      --text: #e6e8ef;
+      --muted: #a7adbf;
+      --accent: #2f7df4;
+      --ok: #1bb978;
+      --warn: #f5a524;
+      --bad: #e5484d;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family: Inter, system-ui, Arial, sans-serif; }
+    header { padding:24px; border-bottom:1px solid #22263a; }
+    header h1 { margin:0 0 8px; font-size:22px; }
+    header p { margin:0; color:var(--muted); font-size:14px; }
+    main { max-width:980px; margin:0 auto; padding:24px; }
+    .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
+    @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .card { background:var(--card); border:1px solid #22263a; border-radius:12px; padding:16px; }
+    .card h2 { margin:0 0 12px; font-size:18px; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .btn { background:var(--accent); color:white; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .btn.secondary { background:#2a2f45; color:var(--text); border:1px solid #363c5e; }
+    .btn.warn { background:var(--warn); color:black; }
+    .btn.ok { background:var(--ok); }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    input, select { width:100%; padding:10px; border-radius:8px; border:1px solid #303659; background:#121527; color:var(--text); }
+    label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .kv { display:grid; grid-template-columns: 140px 1fr; gap:8px; font-size:13px; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#1b1f35; border:1px solid #2b3154; font-size:12px; color:var(--muted); }
+    a { color:#7db1ff; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .hr { height:1px; background:#22263a; margin:12px 0; }
+    footer { padding:18px; color:var(--muted); font-size:12px; border-top:1px solid #22263a; text-align:center; }
+    .status { font-size:12px; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>StableForgeFactory on Base</h1>
+    <p>Decentralized stablecoin factory • Live on Base Mainnet (chain 8453)</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <section class="card">
+        <h2>Network & wallet</h2>
+        <div class="row">
+          <button id="connectBtn" class="btn">Connect wallet</button>
+          <button id="switchBtn" class="btn secondary">Switch to Base (8453)</button>
+        </div>
+        <div class="hr"></div>
+        <div class="kv mono">
+          <div>Account</div><div id="account">—</div>
+          <div>Chain</div><div id="chain">—</div>
+          <div>Factory</div><div id="factoryAddr">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</div>
+          <div>Explorer</div><div><a id="factoryLink" target="_blank" href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA">View on BaseScan</a></div>
+        </div>
+        <p class="status" id="status">Status: idle</p>
+      </section>
+
+      <section class="card">
+        <h2>Deploy stablecoin</h2>
+        <label>Stablecoin name</label>
+        <input id="scName" placeholder="Euro Stable" />
+        <label>Symbol</label>
+        <input id="scSymbol" placeholder="EUSD" />
+        <label>Decimals</label>
+        <input id="scDecimals" type="number" min="6" max="18" value="18" />
+        <label>Owner (optional)</label>
+        <input id="scOwner" placeholder="0x... (defaults to your account)" />
+        <div class="row">
+          <button id="deployBtn" class="btn">Deploy</button>
+          <span class="pill">Emits factory event</span>
+        </div>
+        <p class="status" id="deployStatus">—</p>
+      </section>
+
+      <section class="card">
+        <h2>Aerodrome liquidity</h2>
+        <label>Pair token address (e.g., USDC)</label>
+        <input id="pairToken" class="mono" value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" />
+        <label>Amount (your stablecoin)</label>
+        <input id="lpAmountA" type="text" placeholder="e.g., 1000.0" />
+        <label>Amount (pair token)</label>
+        <input id="lpAmountB" type="text" placeholder="e.g., 1000.0" />
+        <div class="row">
+          <button id="lpApproveBtn" class="btn secondary">Approve router</button>
+          <button id="lpAddBtn" class="btn">Add liquidity</button>
+          <span class="pill mono">Router: 0x6cb442acf35158d5eda88fe602221b67b400be3e</span>
+        </div>
+        <p class="status" id="lpStatus">—</p>
+      </section>
+
+      <section class="card">
+        <h2>Aave deposit</h2>
+        <label>Stablecoin address</label>
+        <input id="aaveToken" class="mono" placeholder="0xYourStablecoin..." />
+        <label>Amount</label>
+        <input id="aaveAmount" type="text" placeholder="e.g., 500.0" />
+        <div class="row">
+          <button id="aaveApproveBtn" class="btn secondary">Approve pool</button>
+          <button id="aaveDepositBtn" class="btn">Deposit</button>
+          <span class="pill mono">Pool: 0x4e033b8c5d5e... (confirm)</span>
+        </div>
+        <p class="status" id="aaveStatus">—</p>
+      </section>
+
+      <section class="card">
+        <h2>Docs & audit</h2>
+        <ul>
+          <li><a target="_blank" href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA">Factory on BaseScan</a></li>
+          <li><a target="_blank" href="https://basescan.org/">BaseScan</a> • <a target="_blank" href="https://www.base.org/">Base</a></li>
+          <li><span class="pill">Confirm router/pool ABIs before use</span></li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    Built for instant usability on Base. Always verify addresses and ABIs before executing on-chain.
+  </footer>
+
+  <script>
+    // ---------- CONFIG ----------
+    const CONFIG = {
+      chainIdHex: '0x2105', // 8453
+      chainIdDec: 8453,
+      chainName: 'Base Mainnet',
+      factory: '0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA',
+      explorer: 'https://basescan.org',
+      aerodromeRouter: '0x6cb442acf35158d5eda88fe602221b67b400be3e',
+      usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      aavePool: '0x4e033b8c5d5e0000000000000000000000000000' // TODO: confirm exact address
+    };
+
+    // ---------- Minimal ABIs (update to canon) ----------
+    // TODO: Replace with canonical Factory ABI.
+    const FACTORY_ABI = [
+      // Example methods — update names/signatures as needed:
+      // "function deployStablecoin(string name,string symbol,uint8 decimals,address owner) returns (address token)",
+      // "event StablecoinCreated(address indexed token,address indexed owner,string name,string symbol,uint8 decimals)"
+    ];
+    const ERC20_ABI = [
+      "function approve(address spender,uint256 amount) returns (bool)",
+      "function allowance(address owner,address spender) view returns (uint256)",
+      "function balanceOf(address owner) view returns (uint256)",
+      "function decimals() view returns (uint8)"
+    ];
+    // Aerodrome Router (placeholder — update to platform’s exact ABI)
+    const AERODROME_ROUTER_ABI = [
+      // "function addLiquidity(address tokenA,address tokenB,uint amountADesired,uint amountBDesired,uint amountAMin,uint amountBMin,address to,uint deadline) returns (uint amountA,uint amountB,uint liquidity)"
+    ];
+    // Aave Pool (placeholder — update to v3 ABI)
+    const AAVE_POOL_ABI = [
+      // "function supply(address asset,uint256 amount,address onBehalfOf,uint16 referralCode)"
+    ];
+
+    // ---------- State ----------
+    let provider, signer, account;
+
+    // ---------- UI helpers ----------
+    const $ = (id) => document.getElementById(id);
+    const setStatus = (el, msg) => { el.textContent = msg; };
+
+    // ---------- Wallet / network ----------
+    async function connectWallet() {
+      if (!window.ethereum) { alert('MetaMask not detected'); return; }
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      account = accounts[0];
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      $('account').textContent = account;
+      const net = await provider.getNetwork();
+      $('chain').textContent = `${net.chainId}`;
+      setStatus($('status'), `Connected. ChainId=${net.chainId}`);
+    }
+
+    async function switchToBase() {
+      if (!window.ethereum) { alert('MetaMask not detected'); return; }
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: CONFIG.chainIdHex }]
+        });
+      } catch (err) {
+        // If chain not added, prompt add
+        if (err.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: CONFIG.chainIdHex,
+              chainName: CONFIG.chainName,
+              rpcUrls: ['https://mainnet.base.org'],
+              blockExplorerUrls: [CONFIG.explorer],
+              nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+            }]
+          });
+        } else {
+          alert(`Switch failed: ${err.message}`);
+        }
+      }
+      const net = await provider.getNetwork();
+      $('chain').textContent = `${net.chainId}`;
+      setStatus($('status'), `Chain switched. ChainId=${net.chainId}`);
+    }
+
+    // ---------- Factory interactions ----------
+    async function deployStablecoin() {
+      if (!signer) { alert('Connect wallet first'); return; }
+      const name = $('scName').value.trim();
+      const symbol = $('scSymbol').value.trim();
+      const decimals = parseInt($('scDecimals').value || '18', 10);
+      const owner = $('scOwner').value.trim() || account;
+
+      if (!name || !symbol || isNaN(decimals)) {
+        alert('Fill name, symbol, decimals'); return;
+      }
+      setStatus($('deployStatus'), 'Preparing deployment…');
+
+      try {
+        const factory = new ethers.Contract(CONFIG.factory, FACTORY_ABI, signer);
+        // TODO: Replace with canonical method name & args
+        // const tx = await factory.deployStablecoin(name, symbol, decimals, owner);
+        // setStatus($('deployStatus'), `Submitted: ${tx.hash}`);
+        // const receipt = await tx.wait();
+        // const evt = receipt.logs?.[0]?.address || 'see events';
+        // setStatus($('deployStatus'), `Deployed. Receipt: ${receipt.transactionHash}`);
+
+        alert('TODO: wire factory ABI & method. Placeholder executed.');
+        setStatus($('deployStatus'), 'Update FACTORY_ABI and method to deploy.');
+      } catch (err) {
+        console.error(err);
+        setStatus($('deployStatus'), `Error: ${err.message}`);
+      }
+    }
+
+    // ---------- Aerodrome (approve + addLiquidity placeholders) ----------
+    async function lpApprove() {
+      if (!signer) { alert('Connect wallet first'); return; }
+      const tokenA = prompt('Stablecoin address to approve for router:');
+      if (!tokenA) return;
+      try {
+        const erc = new ethers.Contract(tokenA, ERC20_ABI, signer);
+        const amt = ethers.utils.parseUnits('1000000000', 18); // large allowance
+        const tx = await erc.approve(CONFIG.aerodromeRouter, amt);
+        setStatus($('lpStatus'), `Approve submitted: ${tx.hash}`);
+        await tx.wait();
+        setStatus($('lpStatus'), 'Approve confirmed');
+      } catch (err) {
+        console.error(err);
+        setStatus($('lpStatus'), `Error: ${err.message}`);
+      }
+    }
+
+    async function lpAdd() {
+      if (!signer) { alert('Connect wallet first'); return; }
+      const tokenA = prompt('Stablecoin address:');
+      const tokenB = $('pairToken').value.trim();
+      const amountA = $('lpAmountA').value.trim();
+      const amountB = $('lpAmountB').value.trim();
+      if (!tokenA || !tokenB || !amountA || !amountB) { alert('Fill all fields'); return; }
+
+      try {
+        const router = new ethers.Contract(CONFIG.aerodromeRouter, AERODROME_ROUTER_ABI, signer);
+        // TODO: Replace with exact addLiquidity method and decimals queries
+        // const amtA = ethers.utils.parseUnits(amountA, 18);
+        // const amtB = ethers.utils.parseUnits(amountB, 6); // USDC likely 6
+        // const tx = await router.addLiquidity(tokenA, tokenB, amtA, amtB, amtA.mul(99).div(100), amtB.mul(99).div(100), account, Math.floor(Date.now()/1000)+1800);
+        // setStatus($('lpStatus'), `Submitted: ${tx.hash}`);
+        alert('TODO: wire router ABI & addLiquidity. Placeholder executed.');
+        setStatus($('lpStatus'), 'Update AERODROME_ROUTER_ABI and call addLiquidity.');
+      } catch (err) {
+        console.error(err);
+        setStatus($('lpStatus'), `Error: ${err.message}`);
+      }
+    }
+
+    // ---------- Aave (approve + supply placeholders) ----------
+    async function aaveApprove() {
+      if (!signer) { alert('Connect wallet first'); return; }
+      const token = $('aaveToken').value.trim();
+      if (!token) { alert('Set stablecoin address'); return; }
+      try {
+        const erc = new ethers.Contract(token, ERC20_ABI, signer);
+        const amt = ethers.utils.parseUnits('1000000000', 18); // large allowance
+        const tx = await erc.approve(CONFIG.aavePool, amt);
+        setStatus($('aaveStatus'), `Approve submitted: ${tx.hash}`);
+        await tx.wait();
+        setStatus($('aaveStatus'), 'Approve confirmed');
+      } catch (err) {
+        console.error(err);
+        setStatus($('aaveStatus'), `Error: ${err.message}`);
+      }
+    }
+
+    async function aaveDeposit() {
+      if (!signer) { alert('Connect wallet first'); return; }
+      const token = $('aaveToken').value.trim();
+      const amount = $('aaveAmount').value.trim();
+      if (!token || !amount) { alert('Fill token & amount'); return; }
+
+      try {
+        const pool = new ethers.Contract(CONFIG.aavePool, AAVE_POOL_ABI, signer);
+        // TODO: query decimals, parseUnits accordingly, call supply(asset, amount, onBehalfOf, referralCode)
+        // const dec = 18; // replace with decimals() query if needed
+        // const amt = ethers.utils.parseUnits(amount, dec);
+        // const tx = await pool.supply(token, amt, account, 0);
+        // setStatus($('aaveStatus'), `Submitted: ${tx.hash}`);
+        alert('TODO: wire Aave ABI & supply. Placeholder executed.');
+        setStatus($('aaveStatus'), 'Update AAVE_POOL_ABI and call supply.');
+      } catch (err) {
+        console.error(err);
+        setStatus($('aaveStatus'), `Error: ${err.message}`);
+      }
+    }
+
+    // ---------- Wire UI ----------
+    $('connectBtn').onclick = connectWallet;
+    $('switchBtn').onclick = switchToBase;
+    $('deployBtn').onclick = deployStablecoin;
+    $('lpApproveBtn').onclick = lpApprove;
+    $('lpAddBtn').onclick = lpAdd;
+    $('aaveApproveBtn').onclick = aaveApprove;
+    $('aaveDepositBtn').onclick = aaveDeposit;
+  </script>
+</body>
+</html>
