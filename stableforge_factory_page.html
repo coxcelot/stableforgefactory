@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StableForgeFactory on Base</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        header {
+            background: #0052cc;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        section {
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0052cc;
+        }
+        button {
+            background-color: #0052cc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input, select {
+            padding: 8px;
+            margin-top: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .address {
+            font-family: monospace;
+            background: #eee;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        a {
+            color: #0052cc;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>StableForgeFactory on Base Mainnet</h1>
+    <p>Decentralized Stablecoin Factory</p>
+</header>
+
+<section>
+    <h2>Overview</h2>
+    <p>StableForgeFactory is a decentralized factory contract deployed on Base Mainnet that allows users to create euro-backed stablecoins (EUSD), provide liquidity via Aerodrome, and earn yield through Aave integration.</p>
+</section>
+
+<section>
+    <h2>Deployment Details</h2>
+    <p><strong>Factory Address:</strong> <span class="address">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</span></p>
+    <p><strong>Network:</strong> Base Mainnet (Chain ID: 8453)</p>
+    <p><a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">View on BaseScan</a></p>
+</section>
+
+<section>
+    <h2>Key Integrations</h2>
+    <ul>
+        <li>EUSD Stablecoin (Euro-backed)</li>
+        <li>Aerodrome LP (Liquidity provision)</li>
+        <li>Aave Integration (Yield generation)</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Key Addresses</h2>
+    <ul>
+        <li><strong>USDC:</strong> <span class="address">0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</span></li>
+        <li><strong>Aerodrome Router:</strong> <span class="address">0x6cb442acf35158d5eda88fe602221b67b400be3e</span></li>
+        <li><strong>Aave Pool:</strong> <span class="address">0x4e033b8c5d5e...</span></li>
+        <li><strong>Creator:</strong> <span class="address">0xfbdb59298ea0b9d867897cceddb0de1e2b03909c</span></li>
+    </ul>
+</section>
+
+<section>
+    <h2>Interactive Console</h2>
+    <button onclick="connectWallet()">Connect Wallet</button>
+    <br><br>
+    <label>Stablecoin Name:</label>
+    <input type="text" id="coinName" placeholder="e.g., EuroStable">
+    <label>Symbol:</label>
+    <input type="text" id="coinSymbol" placeholder="e.g., EUSD">
+    <button onclick="deployStablecoin()">Deploy New Stablecoin</button>
+    <br><br>
+    <button onclick="provideLiquidity()">Provide Liquidity via Aerodrome</button>
+    <br><br>
+    <button onclick="depositToAave()">Deposit into Aave for Yield</button>
+</section>
+
+<script>
+    async function connectWallet() {
+        if (window.ethereum) {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                alert('Wallet connected');
+            } catch (error) {
+                alert('Connection failed');
+            }
+        } else {
+            alert('MetaMask not detected');
+        }
+    }
+
+    function deployStablecoin() {
+        const name = document.getElementById('coinName').value;
+        const symbol = document.getElementById('coinSymbol').value;
+        alert(`Deploying stablecoin: ${name} (${symbol})...`);
+        // Add Web3 interaction here
+    }
+
+    function provideLiquidity() {
+        alert('Initiating liquidity provision via Aerodrome...');
+        // Add Web3 interaction here
+    }
+
+    function depositToAave() {
+        alert('Depositing into Aave for yield...');
+        // Add Web3 interaction here
+    }
+</script>
+
+</body>
+</html>
