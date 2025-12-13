@@ -1,0 +1,22 @@
+const fs = require("fs");
+const path = require("path");
+
+async function main() {
+  const Factory = await ethers.getContractFactory("StableForgeFactory");
+  const factory = await Factory.deploy();
+  await factory.deployed();
+
+  console.log("StableForgeFactory deployed to:", factory.address);
+
+  // Write address into frontend/config.json
+  const configPath = path.resolve(__dirname, "../frontend/config.json");
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ factory: factory.address }, null, 2)
+  );
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
