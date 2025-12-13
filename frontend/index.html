@@ -10,82 +10,60 @@
     header{padding:24px;border-bottom:1px solid #22263a}
     header h1{margin:0 0 8px;font-size:22px}
     header p{margin:0;color:#a7adbf;font-size:14px}
-    main{max-width:980px;margin:0 auto;padding:24px;display:grid;gap:16px;grid-template-columns:1fr 1fr}
-    .card{background:#171a2a;border:1px solid #22263a;border-radius:12px;padding:16px}
-    h2{margin:0 0 12px;font-size:18px}
-    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    main{max-width:600px;margin:0 auto;padding:24px}
+    .card{background:#171a2a;border:1px solid #22263a;border-radius:12px;padding:16px;margin-bottom:16px}
     .btn{background:#2f7df4;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
-    .btn.secondary{background:#2a2f45;color:#e6e8ef;border:1px solid #363c5e}
-    input{width:100%;padding:10px;border-radius:8px;border:1px solid #303659;background:#121527;color:#e6e8ef}
-    label{display:block;font-size:13px;color:#a7adbf;margin-bottom:6px}
+    .status{font-size:12px;color:#a7adbf;margin-top:8px}
     .mono{font-family:ui-monospace,Menlo,Monaco,Consolas,"Courier New",monospace}
-    .status{font-size:12px;color:#a7adbf}
-    .log{font-size:12px;background:#0c1020;border:1px solid #202640;border-radius:8px;padding:8px;max-height:220px;overflow:auto;white-space:pre-wrap}
   </style>
 </head>
 <body>
 <header>
   <h1>StableForgeFactory on Base</h1>
-  <p>Interact with the deployed factory contract on Base Mainnet (chain 8453)</p>
+  <p>Test frontend with working Connect Wallet button</p>
 </header>
 
 <main>
   <section class="card">
     <h2>Network & Wallet</h2>
-    <div class="row">
-      <button id="connectBtn" class="btn">Connect Wallet</button>
-      <button id="switchBtn" class="btn secondary">Switch to Base</button>
-    </div>
+    <button id="connectBtn" class="btn">Connect Wallet</button>
     <p class="status" id="status">Status: idle</p>
     <div class="mono">Account: <span id="account">—</span></div>
     <div class="mono">Chain: <span id="chain">—</span></div>
   </section>
-
-  <section class="card">
-    <h2>Deploy Stablecoin</h2>
-    <label>Name</label><input id="scName" placeholder="Euro Stable" />
-    <label>Symbol</label><input id="scSymbol" placeholder="EUSD" />
-    <label>Decimals</label><input id="scDecimals" type="number" min="6" max="18" value="18" />
-    <label>Owner (optional)</label><input id="scOwner" placeholder="0x... (defaults to your account)" />
-    <div class="row"><button id="deployBtn" class="btn">Deploy</button></div>
-    <p class="status" id="deployStatus">—</p>
-    <div class="log mono" id="deployLog"></div>
-  </section>
-
-  <section class="card">
-    <h2>Aerodrome Liquidity</h2>
-    <label>Stablecoin address</label><input id="lpTokenA" class="mono" placeholder="0xYourStablecoin..." />
-    <label>Pair token (USDC)</label><input id="pairToken" class="mono" value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" />
-    <label>Amount A</label><input id="lpAmountA" placeholder="1000.0" />
-    <label>Amount B</label><input id="lpAmountB" placeholder="1000.0" />
-    <div class="row"><button id="lpApproveBtn" class="btn secondary">Approve</button><button id="lpAddBtn" class="btn">Add Liquidity</button></div>
-    <p class="status" id="lpStatus">—</p>
-    <div class="log mono" id="lpLog"></div>
-  </section>
-
-  <section class="card">
-    <h2>Aave Deposit</h2>
-    <label>Stablecoin address</label><input id="aaveToken" class="mono" placeholder="0xYourStablecoin..." />
-    <label>Amount</label><input id="aaveAmount" placeholder="500.0" />
-    <div class="row"><button id="aaveApproveBtn" class="btn secondary">Approve</button><button id="aaveDepositBtn" class="btn">Deposit</button></div>
-    <p class="status" id="aaveStatus">—</p>
-    <div class="log mono" id="aaveLog"></div>
-  </section>
 </main>
 
+<!-- Script at bottom so DOM is ready -->
 <script>
-const CONFIG = {
-  chainIdHex: '0x2105',
-  chainIdDec: 8453,
-  factory: '0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA',
-  aerodromeRouter: '0x6cb442acf35158d5eda88fe602221b67b400be3e',
-  usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  aavePool: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
-};
-
-// Paste ABI JSON directly here (from artifacts/contracts/StableForgeFactory.sol/StableForgeFactory.json)
-const FACTORY_ABI = [ /* ... full ABI JSON array ... */ ];
-
 let provider, signer, account;
 const $ = id => document.getElementById(id);
-const setStatus = (el,msg)=>{el.textContent=msg
+
+async function connectWallet() {
+  if (!window.ethereum) {
+    alert("MetaMask not detected");
+    return;
+  }
+  try {
+    // Request accounts
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    account = accounts[0];
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+
+    // Update UI
+    $('account').textContent = account;
+    const net = await provider.getNetwork();
+    $('chain').textContent = net.chainId;
+    $('status').textContent = "Connected";
+    console.log("Connected:", account);
+  } catch (err) {
+    console.error("Connection failed:", err);
+    $('status').textContent = "Connection failed: " + err.message;
+  }
+}
+
+// Attach listener AFTER DOM is loaded
+document.getElementById('connectBtn').addEventListener('click', connectWallet);
+</script>
+</body>
+</html>
