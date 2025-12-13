@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>StableForgeFactory • Base Mainnet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#0f1220; --card:#171a2a; --border:#22263a; --text:#e6e8ef; --muted:#a7adbf;
+      --btn:#2f7df4; --btn2:#2a2f45; --btn2b:#363c5e; --input:#121527; --inputb:#303659;
+    }
+    *{box-sizing:border-box}
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,system-ui,Arial,sans-serif }
+    header{padding:24px;border-bottom:1px solid var(--border)}
+    header h1{margin:0 0 8px;font-size:22px}
+    header p{margin:0;color:var(--muted);font-size:14px}
+    main{max-width:1000px;margin:0 auto;padding:24px;display:grid;gap:16px;grid-template-columns:1fr 1fr}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+    h2{margin:0 0 12px;font-size:18px}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .btn{background:var(--btn);color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+    .btn.secondary{background:var(--btn2);color:var(--text);border:1px solid var(--btn2b)}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--inputb);background:var(--input);color:var(--text)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    .mono{font-family:ui-monospace,Menlo,Monaco,Consolas,"Courier New",monospace}
+    .status{font-size:12px;color:var(--muted)}
+    .log{font-size:12px;background:#0c1020;border:1px solid #202640;border-radius:8px;padding:8px;max-height:220px;overflow:auto;white-space:pre-wrap}
+    .warn{color:#ffcc66}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Decentralized stablecoin factory • Live on Base Mainnet (chain 8453)</h1>
+  <p>Connect, deploy, add liquidity on Aerodrome, deposit to Aave, and trigger flashloans.</p>
+</header>
+
+<main>
+  <!-- Network & Wallet -->
+  <section class="card">
+    <h2>Network and wallet</h2>
+    <div class="row">
+      <button id="connectBtn" class="btn">Connect wallet</button>
+      <button id="switchBtn" class="btn secondary">Switch to Base</button>
+    </div>
+    <p class="status" id="status">Status: idle</p>
+    <div class="mono">Account: <span id="account">—</span></div>
+    <div class="mono">Chain: <span id="chain">—</span></div>
+  </section>
+
+  <!-- Deploy Stablecoin -->
+  <section class="card">
+    <h2>Deploy stablecoin</h2>
+    <label>Name</label><input id="scName" placeholder="Euro Stable" />
+    <label>Symbol</label><input id="scSymbol" placeholder="EUSD" />
+    <label>Decimals</label><input id="scDecimals" type="number" min="6" max="18" value="18" />
+    <label>Owner (optional)</label><input id="scOwner" placeholder="0x... (defaults to your account)" />
+    <div class="row"><button id="deployBtn" class="btn">Deploy</button></div>
+    <p class="status" id="deployStatus">—</p>
+    <div class="log mono" id="deployLog"></div>
+  </section>
+
+  <!-- Aerodrome Liquidity -->
+  <section class="card">
+    <h2>Aerodrome liquidity</h2>
+    <label>Stablecoin address</label><input id="lpTokenA" class="mono" placeholder="0xYourStablecoin..." />
+    <label>Pair token (USDC)</label><input id="lpTokenB" class="mono" value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" />
+    <label>Stable pool?</label><input id="lpStable" value="true" />
+    <label>Amount A</label><input id="lpAmountA" placeholder="1000.0" />
+    <label>Amount B</label><input id="lpAmountB" placeholder="1000.0" />
+    <div class="row">
+      <button id="lpApproveA" class="btn secondary">Approve token A</button>
+      <button id="lpApproveB" class="btn secondary">Approve token B</button>
+      <button id="lpAddBtn" class="btn">Add liquidity</button>
+    </div>
+    <p class="status" id="lpStatus">—</p>
+    <div class="log mono" id="lpLog"></div>
+  </section>
+
+  <!-- Aave Deposit -->
+  <section class="card">
+    <h2>Aave deposit</h2>
+    <label>Stablecoin address</label><input id="aaveToken" class="mono" placeholder="0xYourStablecoin..." />
+    <label>Amount</label><input id="aaveAmount" placeholder="500.0" />
+    <div class="row">
+      <button id="aaveApproveBtn" class="btn secondary">Approve</button>
+      <button id="aaveDepositBtn" class="btn">Deposit</button>
+    </div>
+    <p class="status" id="aaveStatus">—</p>
+    <div class="log mono" id="aaveLog"></div>
+  </section>
+
+  <!-- Aave Flashloan -->
+  <section class="card">
+    <h2>Aave flashloan</h2>
+    <p class="status warn">Requires a deployed receiver contract implementing the flashloan callback.</p>
+    <label>Asset</label><input id="flashAsset" class="mono" placeholder="0xYourStablecoin..." />
+    <label>Amount</label><input id="flashAmount" placeholder="1000.0" />
+    <label>Receiver contract</label><input id="flashReceiver" class="mono" placeholder="0xReceiverContract..." />
+    <div class="row"><button id="flashBtn" class="btn">Execute flashloan</button></div>
+    <p class="status" id="flashStatus">—</p>
+    <div class="log mono" id="flashLog"></div>
+  </section>
+</main>
+
+<script>
+/* ---------- Config ---------- */
+const CONFIG = {
+  chainIdHex: '0x2105',       // Base 8453
+  chainIdDec: 8453,
+  // Aerodrome Router (example; confirm current on Base)
+  aerodromeRouter: '0x6cb442acf35158d5eda88fe602221b67b400be3e',
+  // Base USDC (example canonical; confirm)
+  usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  // Aave v3 Pool on Base (example; confirm)
+  aavePool: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
+};
+
+/* ---------- Minimal ABIs ---------- */
+// Factory ABI will be loaded dynamically from ./abi/StableForgeFactory.json
+let FACTORY_ABI = null;
+let FACTORY_ADDRESS = null;
+
+const ERC20_ABI = [
+  "function approve(address spender,uint256 amount) returns (bool)",
+  "function allowance(address owner,address spender) view returns (uint256)",
+  "function decimals() view returns (uint8)"
+];
+
+const AERODROME_ROUTER_ABI = [
+  "function addLiquidity(address tokenA,address tokenB,bool stable,uint amountADesired,uint amountBDesired,uint amountAMin,uint amountBMin,address to,uint deadline) external returns (uint amountA,uint amountB,uint liquidity)"
+];
+
+const AAVE_POOL_ABI = [
+  "function supply(address asset,uint256 amount,address onBehalfOf,uint16 referralCode) external",
+  "function flashLoanSimple(address receiverAddress,address asset,uint256 amount,bytes params,uint16 referralCode) external"
+];
+
+/* ---------- State ---------- */
+let provider, signer, account;
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const setStatus = (el,msg)=>{el.textContent=msg};
+const log=(el,msg)=>{el.textContent=`${new Date().toLocaleTimeString()} • ${msg}\n${el.textContent}`};
+const toUnits = async (tokenAddr, valStr) => {
+  const dec = await new ethers.Contract(tokenAddr, ERC20_ABI, provider).decimals();
+  return ethers.utils.parseUnits(valStr, dec);
+};
+
+/* ---------- ABI + Address loading ---------- */
+async function loadArtifacts() {
+  const abiRes = await fetch("./abi/StableForgeFactory.json");
+  FACTORY_ABI = await abiRes.json();
+  const cfgRes = await fetch("./config.json");
+  const cfg = await cfgRes.json();
+  FACTORY_ADDRESS = cfg.factory;
+}
+
+/* ---------- Network ---------- */
+async function ensureBase() {
+  const net = await provider.getNetwork();
+  $('chain').textContent = net.chainId;
+  if (net.chainId !== CONFIG.chainIdDec) {
+    setStatus($('status'), "Wrong network: switching to Base 8453…");
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: CONFIG.chainIdHex }]
+      });
+      const net2 = await provider.getNetwork();
+      $('chain').textContent = net2.chainId;
+      if (net2.chainId !== CONFIG.chainIdDec) {
+        setStatus($('status'), "Please switch to Base (8453) in your wallet");
+        throw new Error("Not on Base");
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus($('status'), "Switch rejected — please select Base (8453)");
+      throw err;
+    }
+  }
+  setStatus($('status'), "Connected to Base");
+}
+
+/* ---------- Wallet ---------- */
+async function connectWallet(){
+  if(!window.ethereum){alert('MetaMask not detected');return;}
+  try {
+    const accs=await window.ethereum.request({method:'eth_requestAccounts'});
+    account=accs[0];
+    provider=new ethers.providers.Web3Provider(window.ethereum);
+    signer=provider.getSigner();
+    $('account').textContent=account;
+    await ensureBase();
+    await loadArtifacts();
+  } catch(err){
+    console.error(err);
+    setStatus($('status'),'Connection failed: ' + (err?.message||'unknown'));
+  }
+}
+
+async function switchToBase(){
+  try {
+    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:CONFIG.chainIdHex}]});
+    await ensureBase();
+  } catch(err){ console.error(err); setStatus($('status'),'Switch failed: ' + (err?.message||'unknown')); }
+}
+
+/* ---------- Factory: Deploy Stablecoin ---------- */
+async function deployStablecoin(){
+  if(!signer){alert('Connect wallet first');return;}
+  await ensureBase();
+  const name=$('scName').value.trim();
+  const symbol=$('scSymbol').value.trim();
+  const decimals=parseInt($('scDecimals').value||'18',10);
+  const ownerInput=$('scOwner').value.trim();
+  const owner=ownerInput || account;
+  try {
+    const factory=new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, signer);
+    const tx=await factory.deployStablecoin(name, symbol, decimals, owner);
+    setStatus($('deployStatus'),`Tx: ${tx.hash}`);
+    log($('deployLog'),`submitted ${tx.hash}`);
+    const receipt=await tx.wait();
+    log($('deployLog'),`confirmed block=${receipt.blockNumber}`);
+  } catch(err){ console.error(err); setStatus($('deployStatus'),'Error: ' + (err?.message||'unknown')); }
+}
+
+/* ---------- Aerodrome: Approvals + Add Liquidity ---------- */
+async function approveToken(tokenAddr, spenderAddr, amountStr, statusEl, logEl){
+  await ensureBase();
+  try {
+    const amount = await toUnits(tokenAddr, amountStr);
+    const erc = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
+    const tx = await erc.approve(spenderAddr, amount);
+    setStatus(statusEl, `Approve tx: ${tx.hash}`);
+    log(logEl, `approve submitted ${tx.hash}`);
+    await tx.wait();
+    log(logEl, `approve confirmed`);
+  } catch(err){ console.error(err); setStatus(statusEl, 'Approve error: ' + (err?.message||'unknown')); }
+}
+
+async function addLiquidity(){
+  if(!signer){alert('Connect wallet first');return;}
+  await ensureBase();
+  const tokenA=$('lpTokenA').value.trim();
+  const tokenB=$('lpTokenB').value.trim();
+  const stable = String($('lpStable').value).toLowerCase() === 'true';
+  const amtA=$('lpAmountA').value.trim();
+  const amtB=$('lpAmountB').value.trim();
+  try {
+    const amountADesired = await toUnits(tokenA, amtA);
+    const amountBDesired = await toUnits(tokenB, amtB);
+    const amountAMin = amountADesired.mul(99).div(100); // 1% slippage buffer
+    const amountBMin = amountBDesired.mul(99).div(100);
+    const deadline = Math.floor(Date.now()/1000)+1800; // 30min
+
+    const router = new ethers.Contract(CONFIG.aerodromeRouter, AERODROME_ROUTER_ABI, signer);
+    const tx = await router.addLiquidity(tokenA, tokenB, stable, amountADesired, amountBDesired, amountAMin, amountBMin, account, deadline);
+    setStatus($('lpStatus'), `AddLiquidity tx: ${tx.hash}`);
+    log($('lpLog'), `submitted ${tx.hash}`);
+    const receipt = await tx.wait();
+    log($('lpLog'), `confirmed block=${receipt.blockNumber}`);
+  } catch(err){ console.error(err); setStatus($('lpStatus'),'Liquidity error: ' + (err?.message||'unknown')); }
+}
+
+/* ---------- Aave: Approve + Supply ---------- */
+async function aaveApprove(){
+  if(!signer){alert('Connect wallet first');return;}
+  await ensureBase();
+  const token=$('aaveToken').value.trim();
+  const amtStr=$('aaveAmount').value.trim();
+  await approveToken(token, CONFIG.aavePool, amtStr, $('aaveStatus'), $('aaveLog'));
+}
+
+async function aaveDeposit(){
+  if(!signer){alert('Connect wallet first');return;}
+  await ensureBase();
+  const token=$('aaveToken').value.trim();
+  const amtStr=$('aaveAmount').value.trim();
+  try {
+    const amount = await toUnits(token, amtStr);
+    const pool = new ethers.Contract(CONFIG.aavePool, AAVE_POOL_ABI, signer);
+    const tx = await pool.supply(token, amount, account, 0);
+    setStatus($('aaveStatus'), `Supply tx: ${tx.hash}`);
+    log($('aaveLog'), `submitted ${tx.hash}`);
+    const receipt = await tx.wait();
+    log($('aaveLog'), `confirmed block=${receipt.blockNumber}`);
+  } catch(err){ console.error(err); setStatus($('aaveStatus'),'Deposit error: ' + (err?.message||'unknown')); }
+}
+
+/* ---------- Aave: Flashloan ---------- */
+async function flashLoan(){
+  if(!signer){alert('Connect wallet first');return;}
+  await ensureBase();
+  const asset=$('flashAsset').value.trim();
+  const amtStr=$('flashAmount').value.trim();
+  const receiver=$('flashReceiver').value.trim();
+  try {
+    // Amount uses asset decimals
+    const amount = await toUnits(asset, amtStr);
+    const pool = new ethers.Contract(CONFIG.aavePool, AAVE_POOL_ABI, signer);
+    const tx = await pool.flashLoanSimple(receiver, asset, amount, "0x", 0);
+    setStatus($('flashStatus'), `Flashloan tx: ${tx.hash}`);
+    log($('flashLog'), `submitted ${tx.hash}`);
+    const receipt = await tx.wait();
+    log($('flashLog'), `confirmed block=${receipt.blockNumber}`);
+  } catch(err){ console.error(err); setStatus($('flashStatus'),'Flashloan error: ' + (err?.message||'unknown')); }
+}
+
+/* ---------- Wire UI ---------- */
+document.getElementById('connectBtn').addEventListener('click', connectWallet);
+document.getElementById('switchBtn').addEventListener('click', switchToBase);
+document.getElementById('deployBtn').addEventListener('click', deployStablecoin);
+
+document.getElementById('lpApproveA').addEventListener('click', async ()=>{
+  await approveToken($('lpTokenA').value.trim(), CONFIG.aerodromeRouter, $('lpAmountA').value.trim(), $('lpStatus'), $('lpLog'));
+});
+document.getElementById('lpApproveB').addEventListener('click', async ()=>{
+  await approveToken($('lpTokenB').value.trim(), CONFIG.aerodromeRouter, $('lpAmountB').value.trim(), $('lpStatus'), $('lpLog'));
+});
+document.getElementById('lpAddBtn').addEventListener('click', addLiquidity);
+
+document.getElementById('aaveApproveBtn').addEventListener('click', aaveApprove);
+document.getElementById('aaveDepositBtn').addEventListener('click', aaveDeposit);
+
+document.getElementById('flashBtn').addEventListener('click', flashLoan);
+</script>
+</body>
+</html>
