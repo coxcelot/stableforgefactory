@@ -1,141 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StableForgeFactory - Decentralized Stablecoin Factory</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .glow {
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>StableForgeFactory • Base Mainnet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    body { margin:0; background:#0f1220; color:#e6e8ef; font-family:Inter,system-ui,Arial,sans-serif }
+    header{padding:24px;border-bottom:1px solid #22263a} header h1{margin:0 0 8px;font-size:22px} header p{margin:0;color:#a7adbf;font-size:14px}
+    main{max-width:980px;margin:0 auto;padding:24px;display:grid;gap:16px;grid-template-columns:1fr 1fr}
+    .card{background:#171a2a;border:1px solid #22263a;border-radius:12px;padding:16px}
+    h2{margin:0 0 12px;font-size:18px} .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .btn{background:#2f7df4;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+    .btn.secondary{background:#2a2f45;color:#e6e8ef;border:1px solid #363c5e}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #303659;background:#121527;color:#e6e8ef}
+    label{display:block;font-size:13px;color:#a7adbf;margin-bottom:6px}
+    .mono{font-family:ui-monospace,Menlo,Monaco,Consolas,"Courier New",monospace}
+    .status{font-size:12px;color:#a7adbf}
+    .log{font-size:12px;background:#0c1020;border:1px solid #202640;border-radius:8px;padding:8px;max-height:220px;overflow:auto;white-space:pre-wrap}
+  </style>
 </head>
-<body class="text-white">
-    <div class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="glass glow rounded-2xl p-8 max-w-2xl w-full">
-            <!-- Header -->
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold mb-2">StableForgeFactory</h1>
-                <p class="text-blue-200 text-lg">Decentralized Stablecoin Factory on Base</p>
-            </div>
+<body>
+<header>
+  <h1>StableForgeFactory on Base</h1>
+  <p>Interact with the deployed factory contract on Base Mainnet (chain 8453)</p>
+</header>
 
-            <!-- Status -->
-            <div class="bg-blue-900/30 rounded-lg p-6 mb-8">
-                <h2 class="text-xl font-semibold mb-4">Deployment Information</h2>
-                <div class="space-y-3">
-                    <div>
-                        <p class="text-blue-300 text-sm mb-1">Factory Address:</p>
-                        <p class="text-mono text-sm break-all">
-                            <a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-blue-300 text-sm mb-1">Network:</p>
-                        <p class="font-semibold">Base Mainnet (Chain ID: 8453)</p>
-                    </div>
-                    <div>
-                        <p class="text-blue-300 text-sm mb-1">View on BlockExplorer:</p>
-                        <p class="text-mono text-sm">
-                            <a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Features -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="bg-blue-900/20 rounded-lg p-4 text-center">
-                    <div class="text-2xl mb-2">💰</div>
-                    <h3 class="font-semibold mb-2">EUSD Stablecoin</h3>
-                    <p class="text-sm text-blue-200">Euro-backed stablecoin</p>
-                </div>
-                <div class="bg-blue-900/20 rounded-lg p-4 text-center">
-                    <div class="text-2xl mb-2">🌉</div>
-                    <h3 class="font-semibold mb-2">Aerodrome LP</h3>
-                    <p class="text-sm text-blue-200">Liquidity provision</p>
-                </div>
-                <div class="bg-blue-900/20 rounded-lg p-4 text-center">
-                    <div class="text-2xl mb-2">🏦</div>
-                    <h3 class="font-semibold mb-2">Aave Integration</h3>
-                    <p class="text-sm text-blue-200">Yield generation</p>
-                </div>
-            </div>
-
-            <!-- Key Addresses -->
-            <div class="bg-blue-900/30 rounded-lg p-6 mb-8">
-                <h2 class="text-xl font-semibold mb-4">Key Addresses</h2>
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between items-start">
-                        <span class="text-blue-300">USDC:</span>
-                        <span class="font-mono text-right">0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</span>
-                    </div>
-                    <div class="flex justify-between items-start">
-                        <span class="text-blue-300">Aerodrome Router:</span>
-                        <span class="font-mono text-right">0x6cb442acf35158d5eda88fe602221b67b400be3e</span>
-                    </div>
-                    <div class="flex justify-between items-start">
-                        <span class="text-blue-300">Aave Pool:</span>
-                        <span class="font-mono text-right">0x4e033b8c5d5e...</span>
-                    </div>
-                    <div class="flex justify-between items-start">
-                        <span class="text-blue-300">Creator:</span>
-                        <span class="font-mono text-right">0xfbdb59298ea0b9d867897cceddb0de1e2b03909c</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="space-y-3">
-                <a href="https://basescan.org/address/<a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>" target="_blank" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition-colors">
-                    View on BaseScan
-                </a>
-                <a href="https://github.com/coxcelot/stableforgefactory" target="_blank" class="block w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-lg text-center transition-colors">
-                    View on GitHub
-                </a>
-            </div>
-
-            <!-- Footer -->
-            <div class="mt-8 pt-6 border-t border-blue-400/20 text-center text-sm text-blue-200">
-                <p>StableForgeFactory v1.0.0</p>
-                <p class="mt-2">Built on Base Mainnet with Aerodrome & Aave</p>
-            </div>
-        </div>
+<main>
+  <section class="card">
+    <h2>Network & Wallet</h2>
+    <div class="row">
+      <button id="connectBtn" class="btn">Connect Wallet</button>
+      <button id="switchBtn" class="btn secondary">Switch to Base</button>
     </div>
+    <p class="status" id="status">Status: idle</p>
+    <div class="mono">Account: <span id="account">—</span></div>
+    <div class="mono">Chain: <span id="chain">—</span></div>
+  </section>
 
-    <!-- Web3 Connection Script -->
-    <script>
-        // Example: Connect to wallet and interact with factory
-        async function connectWallet() {
-            if (window.ethereum) {
-                try {
-                    const accounts = await window.ethereum.request({ 
-                        method: 'eth_requestAccounts' 
-                    });
-                    console.log("Connected:", accounts[0]);
-                } catch (error) {
-                    console.error("Connection failed:", error);
-                }
-            } else {
-                alert("Please install a Web3 wallet like MetaMask");
-            }
-        }
+  <section class="card">
+    <h2>Deploy Stablecoin</h2>
+    <label>Name</label><input id="scName" placeholder="Euro Stable" />
+    <label>Symbol</label><input id="scSymbol" placeholder="EUSD" />
+    <label>Decimals</label><input id="scDecimals" type="number" min="6" max="18" value="18" />
+    <label>Owner (optional)</label><input id="scOwner" placeholder="0x... (defaults to your account)" />
+    <div class="row"><button id="deployBtn" class="btn">Deploy</button></div>
+    <p class="status" id="deployStatus">—</p>
+    <div class="log mono" id="deployLog"></div>
+  </section>
 
-        // Auto-update factory address links when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            const placeholder = '<a href="https://basescan.org/address/0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA" target="_blank">0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA</a>';
-            // In production, the deployment script will replace these automatically
-            console.log("StableForgeFactory frontend loaded");
-        });
-    </script>
-</body>
-</html>
+  <section class="card">
+    <h2>Aerodrome Liquidity</h2>
+    <label>Stablecoin address</label><input id="lpTokenA" class="mono" placeholder="0xYourStablecoin..." />
+    <label>Pair token (USDC)</label><input id="pairToken" class="mono" value="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" />
+    <label>Amount A</label><input id="lpAmountA" placeholder="1000.0" />
+    <label>Amount B</label><input id="lpAmountB" placeholder="1000.0" />
+    <div class="row"><button id="lpApproveBtn" class="btn secondary">Approve</button><button id="lpAddBtn" class="btn">Add Liquidity</button></div>
+    <p class="status" id="lpStatus">—</p>
+    <div class="log mono" id="lpLog"></div>
+  </section>
+
+  <section class="card">
+    <h2>Aave Deposit</h2>
+    <label>Stablecoin address</label><input id="aaveToken" class="mono" placeholder="0xYourStablecoin..." />
+    <label>Amount</label><input id="aaveAmount" placeholder="500.0" />
+    <div class="row"><button id="aaveApproveBtn" class="btn secondary">Approve</button><button id="aaveDepositBtn" class="btn">Deposit</button></div>
+    <p class="status" id="aaveStatus">—</p>
+    <div class="log mono" id="aaveLog"></div>
+  </section>
+</main>
+
+<script type="module">
+import factoryArtifact from "../artifacts/contracts/StableForgeFactory.sol/StableForgeFactory.json" assert { type: "json" };
+
+const CONFIG = {
+  chainIdHex: '0x2105',
+  chainIdDec: 8453,
+  chainName: 'Base Mainnet',
+  rpcUrl: 'https://mainnet.base.org',
+  explorer: 'https://basescan.org',
+  factory: '0x243087B2AB49153d9Cd27Fed286BbAFA0df5a7dA',
+  aerodromeRouter: '0x6cb442acf35158d5eda88fe602221b67b400be3e',
+  usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  aavePool: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
+};
+
+const FACTORY_ABI = factoryArtifact.abi;
+const ERC20_ABI = [
+  "function approve(address spender,uint256 amount) returns (bool)",
+  "function decimals() view returns (uint8)"
+];
+const AERODROME_ROUTER_ABI = [
+  "function addLiquidity(address tokenA,address tokenB,bool stable,uint amountADesired,uint amountBDesired,uint amountAMin,uint amountBMin,address to,uint deadline) external returns (uint amountA,uint amountB,uint liquidity)"
+];
+const AAVE_POOL_ABI = [
+  "function supply(address asset,uint256 amount,address onBehalfOf,uint16 referralCode) external"
+];
+
+let provider, signer, account;
+const $ = id => document.getElementById(id);
+const setStatus = (el,msg)=>{el.textContent=msg}; const log=(el,msg)=>{el.textContent=`${msg}\n${el.textContent}`};
+
+async function connectWallet(){
+  if(!window.ethereum){alert('MetaMask not detected');return;}
+  try {
+    const acc=await window.ethereum.request({method:'eth_requestAccounts'});
+    account=acc[0]; provider=new ethers.providers.Web3Provider(window.ethereum); signer=provider.getSigner();
+    $('account').textContent=account; const net=await provider.getNetwork(); $('chain').textContent=net.chainId;
+    setStatus($('status'),'Connected');
+  } catch(err){console.error(err); setStatus($('status'),'Connection failed');}
+}
+
+async function switchToBase(){
+  try {
+    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:CONFIG.chainIdHex}]});
+  } catch(err){console.error(err);}
+}
+
+async function deployStablecoin(){
+  if(!signer){alert('Connect wallet first');return;}
+  const name=$('scName').value.trim(); const symbol=$('scSymbol').value.trim(); const decimals=parseInt($('scDecimals').value||'18',10);
+  const owner=$('scOwner').value.trim()||account;
+  try {
+    const factory=new ethers.Contract(CONFIG.factory,FACTORY_ABI,signer);
+    const tx=await factory.deployStablecoin(name,symbol,decimals,owner);
+    setStatus($('deployStatus'),`Tx: ${tx.hash}`); log($('deployLog'),`submitted ${tx.hash}`);
+    const receipt=await tx.wait(); log($('deployLog'),`confirmed block=${receipt.blockNumber}`);
+  } catch(err){console.error(err); setStatus($('deployStatus
