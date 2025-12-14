@@ -1,0 +1,62 @@
+name: Full StableForge Pipeline (Testnet + Mainnet)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 2. Setup Node
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Full pipeline
+      - name: Compile, Deploy (testnet+mainnet), Verify, Export ABI, Publish, Relay
+        run: |
+          # Compile contracts
+          npx hardhat compile
+
+          # Deploy to Base Goerli (testnet)
+          npx hardhat run scripts/deploy.js --network baseGoerli
+          ADDR_TEST=$(jq -r '.factory' frontend/config.json)
+
+          # Verify on BaseScan testnet
+          npx hardhat verify --network baseGoerli $ADDR_TEST
+
+          # Deploy to Base mainnet
+          npx hardhat run scripts/deploy.js --network base
+          ADDR_MAIN=$(jq -r '.factory' frontend/config.json)
+
+          # Verify on BaseScan mainnet
+          npx hardhat verify --network base $ADDR_MAIN
+
+          # Export ABI to frontend
+          npx hardhat export-abi
+
+          # Merge both addresses into config.json
+          jq -n --arg test "$ADDR_TEST" --arg main "$ADDR_MAIN" \
+            '{factoryTestnet:$test, factoryMainnet:$main}' > frontend/config.json
+
+          # Publish frontend to GitHub Pages
+          npx gh-pages -d frontend
+
+          # Relay signed meta-transactions (gasless UX)
+          node scripts/relay.js
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          BASESCAN_API_KEY: ${{ secrets.BASESCAN_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
