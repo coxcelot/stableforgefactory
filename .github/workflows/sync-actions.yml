@@ -1,0 +1,39 @@
+name: Sync Forked Actions
+
+on:
+  schedule:
+    # Runs once a week (Sunday at midnight UTC)
+    - cron: '0 0 * * 0'
+  workflow_dispatch:   # allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo: 
+          - checkout
+          - setup-node
+          - upload-artifact
+          - download-artifact
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          repository: coxcelot/${{ matrix.repo }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/actions/${{ matrix.repo }}.git
+          git fetch upstream
+
+      - name: Merge upstream changes
+        run: |
+          git checkout main
+          git merge upstream/main --no-edit || true
+
+      - name: Push updated fork
+        run: |
+          git push origin main
